@@ -1,0 +1,8 @@
+# Virtualenv
+env/*
+
+# idea
+.idea/*
+
+# System
+.DS_Store

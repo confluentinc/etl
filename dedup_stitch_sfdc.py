@@ -5,6 +5,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import json
 import os
+from query import query, destination
 
 ### GBQ configuration
 config_file_path=os.path.expanduser('~/.confluentR.config')
@@ -29,20 +30,16 @@ project_id = bq_project
 client = bigquery.Client(credentials=bq_credentials, project=project_id)
 print ("Conection setup complete")
 
+def update_table(query, destination):
+    job_config = bigquery.QueryJobConfig()
+    # Set the destination table
+    table_ref = client.dataset("sfdc").table(destination)
+    job_config.destination = table_ref
+    job_config.write_disposition = "WRITE_TRUNCATE"
+    query_job = client.query(query, job_config = job_config)
+    query_job.result()
+    print("Query results loaded to table {}".format(table_ref.path))
 
-# Opportunity Obeject
-job_config = bigquery.QueryJobConfig()
-# Set the destination table
-table_ref = client.dataset("stitch_sfdc").table("opportunities_clean")
-job_config.destination = table_ref
-job_config.write_disposition = "WRITE_TRUNCATE"
-sql = """
-       SELECT * EXCEPT (ROW_NUMBER)
-         FROM (SELECT *, 
-                      ROW_NUMBER() OVER (PARTITION BY id ORDER BY _sdc_received_at DESC) ROW_NUMBER
-                 FROM stitch_sfdc.Opportunity)
-        WHERE ROW_NUMBER = 1;
-""" 
-query_job = client.query(sql, job_config = job_config)
-query_job.result()
-print("Query results loaded to table {}".format(table_ref.path))
+objects = ["opportunity", "account", "opportunity line item", "campaign", "lead", "pricebook entry", "product2", "user"]
+for obj in objects:
+    update_table(query[obj], destination[obj])
