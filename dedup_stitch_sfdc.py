@@ -6,9 +6,11 @@ from google.oauth2 import service_account
 import json
 import os
 from query import query, destination
+from datetime import datetime
 
+print(datetime.now())
 ### GBQ configuration
-config_file_path=os.path.expanduser('~/.confluentR.config')
+config_file_path=os.path.expanduser('/home/yiying.cheng/.confluentR.config')
 
 with open(config_file_path) as f:
     my_config = f.readline()[:-1]

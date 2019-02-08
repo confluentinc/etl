@@ -1,0 +1,11 @@
+2019-02-08 18:21:02.066121
+{'user': 'yiying', 'bq_credentials': '~/.confluentR_bq.json', 'bq_project': 'datascience-222717', 'bq_dataset': 'workspace_yiying'}
+Conection setup complete
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/opportunity
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/account
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/opportunity_line_item
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/campaign
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/lead
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/pricebook_entry
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/product2
+Query results loaded to table /projects/datascience-222717/datasets/sfdc/tables/user
