@@ -6,3 +6,6 @@ env/*
 
 # System
 .DS_Store
+
+# CSV
+*.csv

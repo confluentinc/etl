@@ -10,7 +10,8 @@ sfdc_snapshot_query = """
       SELECT * EXCEPT (ROW_NUMBER)
         FROM (SELECT *, 
                      ROW_NUMBER() OVER (PARTITION BY id ORDER BY _sdc_batched_at DESC) ROW_NUMBER
-                FROM stitch_sfdc.{})
+                FROM stitch_sfdc.{}
+               WHERE isdeleted = FALSE)
        WHERE ROW_NUMBER = 1;
 """
 for obj in objects:
