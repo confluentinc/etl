@@ -5,12 +5,12 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import json
 import os
-from query import query, destination
+from query_sfdc import query, destination
 from datetime import datetime
 
 print(datetime.now())
 ### GBQ configuration
-config_file_path=os.path.expanduser('/home/yiying.cheng/.confluentR.config')
+config_file_path=os.path.expanduser('~/.confluentR.config')
 
 with open(config_file_path) as f:
     my_config = f.readline()[:-1]
@@ -42,6 +42,6 @@ def update_table(query, destination):
     query_job.result()
     print("Query results loaded to table {}".format(table_ref.path))
 
-objects = ["opportunity", "account", "opportunity line item", "campaign", "lead", "pricebook entry", "product2", "user"]
+objects = [ "campaign member", "opportunity", "account", "opportunity line item", "campaign", "lead", "pricebook entry", "product2", "user", "opportunity field history"]
 for obj in objects:
     update_table(query[obj], destination[obj])

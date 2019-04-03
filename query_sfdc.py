@@ -3,7 +3,7 @@ query = {}
 destination = {}
 
 
-objects_del = ["opportunity", "account", "campaign", "lead", "pricebook entry", "product2", "case", "contact", "contract", "event", "group",
+objects_del = ["opportunity", "account", "campaign", "campaign member", "lead", "pricebook entry", "product2", "case", "contact", "contract", "event", "group",
            "lead history", "opportunity contact role", "opportunity field history", "opportunity history", "opportunity line item"]
 
 objects_no_del = ["user", "user role", "opportunity stage", "period"]
