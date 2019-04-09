@@ -1,4 +1,25 @@
 sql = {}
+
+sql['audit'] = """
+SELECT DISTINCT 
+       id,
+       ticket_id,
+       created_at,
+       author_id
+  FROM zendesk.ticket_audits
+ WHERE created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
+"""
+
+sql['change_event'] = """
+SELECT DISTINCT a.id AS audit_id,
+       e.id AS event_id,
+       e.field_name,
+       e.value,
+       e.previous_value
+ FROM zendesk.ticket_audits a, unnest(events) AS e
+ WHERE a.created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
+"""
+
 sql["ticket_data"] = """
 SELECT
   *
@@ -59,31 +80,13 @@ WHERE
   rn = 1 -- get latest version 
 """
 
-sql['audit'] = """
-SELECT DISTINCT 
-       id,
-       ticket_id,
-       created_at,
-       author_id
-  FROM zendesk.ticket_audits
- WHERE created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
-"""
 
-sql['change_event'] = """
-SELECT DISTINCT a.id AS audit_id,
-       e.id AS event_id,
-       e.field_name,
-       e.value,
-       e.previous_value
- FROM zendesk.ticket_audits a, unnest(events) AS e
-WHERE a.created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
-"""
 sql['ticket_priority'] = """
  SELECT DISTINCT ticket_id,
         value AS priority
   FROM zendesk_v.ticket_data
  WHERE field_id = 33471847
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['ticket_time_spent'] = """
@@ -101,7 +104,7 @@ SELECT DISTINCT ticket_id,
        value AS component
   FROM zendesk_v.ticket_data
  WHERE field_id = 33020448
-   AND valus IS NOT NULL
+   AND value IS NOT NULL
 """
 
 sql["ticket_cause"] = """
@@ -109,7 +112,7 @@ SELECT DISTINCT ticket_id,
        value AS cause
   FROM zendesk_v.ticket_data
  WHERE field_id = 47641647
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['ticket_kafka_version'] = """
@@ -117,7 +120,7 @@ SELECT DISTINCT ticket_id,
        value AS kafka_version
   FROM zendesk_v.ticket_data
  WHERE field_id = 24843497
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['ticket_java_version'] = """
@@ -125,7 +128,7 @@ SELECT DISTINCT ticket_id,
        value AS java_version
   FROM zendesk_v.ticket_data
  WHERE field_id = 26235617
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['ticket_operating_system'] = """
@@ -133,7 +136,7 @@ SELECT DISTINCT ticket_id,
        value AS operating_system
   FROM zendesk_v.ticket_data
  WHERE field_id = 26235607
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['bundle_usage'] = """
@@ -141,7 +144,7 @@ SELECT DISTINCT ticket_id,
        value_binary AS bundle_usage
   FROM zendesk_v.ticket_data
  WHERE field_id = 360000036206
-  AND valus IS NOT NULL
+  AND value IS NOT NULL
 """
 
 sql['ticket_initial_priority'] = """

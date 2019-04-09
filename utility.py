@@ -35,7 +35,7 @@ def setup_gbp(config_path):
     return client
 
 def query_to_bq(client, query, destination):
-    """Store the query result into a Google BigQuery table.
+    """Write the query result into a Google BigQuery table.
     :param client: bigquery client
     :param query: the query
     :param destination_table: Name of table to be written, in the form of dataset.tablename.
@@ -50,7 +50,24 @@ def query_to_bq(client, query, destination):
     query_job = client.query(query, job_config = job_config)
     query_job.result()
     print("Query results loaded to table {}".format(table_ref.path))
-    
+
+def query_append_bq(client, query, destination):
+    """Append the query result into a existing BigQuery table.
+    :param client: bigquery client
+    :param query: the query
+    :param destination_table: Name of table to be written, in the form of dataset.tablename.
+    :return: None
+    """
+    job_config = bigquery.QueryJobConfig()
+    # Set the destination table
+    dest = destination.split('.')
+    table_ref = client.dataset(dest[0]).table(dest[1])
+    job_config.destination = table_ref
+    job_config.write_disposition = "WRITE_APPEND"
+    query_job = client.query(query, job_config = job_config)
+    query_job.result()
+    print("Query results loaded to table {}".format(table_ref.path))
+
 def load_data_from_file(client, dataset_id, table_id, source_file_name):
     """Create a table in BigQuery from a local file
     :param client: bigquery client
