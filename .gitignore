@@ -12,3 +12,8 @@ logs/*
 
 # CSV
 *.csv
+
+# Excel
+*.xlsx
+
+__pycache__/*

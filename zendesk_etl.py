@@ -7,7 +7,7 @@ import json
 import os
 from query_zendesk import sql
 from datetime import datetime
-from utility import setup_gbp, df_to_bq, query_to_bq, query_append_bq
+from utility import setup_gbp, query_to_bq, query_append_bq
 
 
 print(datetime.now())
