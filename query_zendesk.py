@@ -167,6 +167,7 @@ sql['ticket'] = """
 SELECT
   DISTINCT tickets.id,
   organizations.name AS organization,
+  tickets.organization_id,
   user.name AS assignee,
   tickets.created_at,
   tickets.updated_at,
@@ -241,6 +242,28 @@ LEFT JOIN
   zendesk_v.ticket_time_spent time
 ON
   tickets.id = time.ticket_id
+"""
+
+sql["satisfaction_rating"] = """
+SELECT
+  *
+FROM (
+  SELECT DISTINCT
+    id,
+    assignee_id,
+    group_id,
+	requester_id,
+	ticket_id,
+    score,
+    reason,
+    comment,
+    created_at,
+    updated_at,
+    RANK() OVER(PARTITION BY id ORDER BY _sdc_batched_at DESC) AS rn
+  FROM
+    zendesk.satisfaction_ratings)
+WHERE
+  rn = 1 -- get latest version 
 """
 
 # select bundle_usage, count(*) as cnt
