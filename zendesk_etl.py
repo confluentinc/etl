@@ -16,7 +16,8 @@ client = setup_gbp('~/.confluentR.config')
 incremental_table = ["audit", "change_event"]
 full_table = ["user", "ticket_data", "ticket_priority", "ticket_initial_priority","ticket_time_spent",
 			  "ticket_component", "ticket_cause", "bundle_usage", "ticket_kafka_version",
-			  "ticket_java_version", "ticket_operating_system","ticket", "satisfaction_rating"]
+			  "ticket_java_version", "ticket_operating_system","ticket", "satisfaction_rating",
+			  "ticket_csat"]
 
 # Insert newly appended records from stitch audit table to audit and change_event
 for t in incremental_table:

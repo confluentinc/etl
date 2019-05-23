@@ -187,11 +187,19 @@ SELECT
   priority.priority,
   ifnull(ip.initial_priority, priority.priority) initial_priority,
   component.component,
+  CASE WHEN component.component LIKE '%broker%' THEN 'broker'
+       WHEN component.component LIKE '%c3%' THEN 'c3'
+       WHEN component.component LIKE '%client%' THEN 'client'
+       WHEN component.component LIKE '%kafka_connect%' THEN 'connect'
+       WHEN component.component LIKE '%librd%' THEN 'librd'
+  ELSE component.component END AS component_group,
   time.time_spent,
   cause.cause,
   kversion.kafka_version,
   bundle.bundle_usage,
   metric.ttfr,
+  metric.ttfr/60 AS ttfr_hours,
+  metric.ttr/60 AS ttr_hours,
   metric.ttr,
   metric.solved_at,
   metric.agent_wait_time,
@@ -266,6 +274,17 @@ WHERE
   rn = 1 -- get latest version 
 """
 
+sql["ticket_csat"] = """
+SELECT t.id,
+       score,
+       CASE WHEN score = 'bad' THEN 1 ELSE 0 END AS bad,
+       CASE WHEN score = 'good' THEN 1 ELSE 0 END AS good,
+       CASE WHEN score = 'offered' THEN 1 ELSE 0 END AS offered,
+       t.updated_at,
+       t.created_at
+FROM zendesk_v.satisfaction_rating s
+JOIN zendesk_v.ticket t ON s.ticket_id = t.id
+"""
 # select bundle_usage, count(*) as cnt
 # from (
 # SELECT ticket_id,
