@@ -276,6 +276,8 @@ WHERE
 
 sql["ticket_csat"] = """
 SELECT t.id,
+       t.organization,
+       t.organization_id,
        score,
        CASE WHEN score = 'bad' THEN 1 ELSE 0 END AS bad,
        CASE WHEN score = 'good' THEN 1 ELSE 0 END AS good,
