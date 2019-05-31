@@ -30,12 +30,13 @@ FROM (
     cust.value AS value,
     cust.value__bo AS value_binary,
     updated_at,
-    RANK() OVER(PARTITION BY t.id ORDER BY _sdc_batched_at DESC) AS rn
+    RANK() OVER(PARTITION BY t.id ORDER BY _sdc_sequence DESC) AS rn
   FROM
     zendesk.tickets t, UNNEST(custom_fields) AS cust)
 WHERE
   rn = 1 -- get latest update
 """
+
 sql["user"] = """
 SELECT
   *
@@ -51,7 +52,7 @@ FROM (
     default_group_id as group_id,
     time_zone,
     suspended,
-    RANK() OVER(PARTITION BY id ORDER BY _sdc_batched_at DESC) AS rn
+    RANK() OVER(PARTITION BY id ORDER BY _sdc_sequence DESC) AS rn
   FROM
     zendesk.users)
 WHERE
@@ -72,7 +73,7 @@ FROM (
     replies,
     requester_wait_time_in_minutes.calendar AS requester_wait_time,
     agent_wait_time_in_minutes.calendar AS agent_wait_time,
-    RANK() OVER(PARTITION BY ticket_id ORDER BY _sdc_batched_at DESC) AS rn
+    RANK() OVER(PARTITION BY ticket_id ORDER BY _sdc_sequence DESC) AS rn
   FROM
     zendesk.ticket_metrics
      )
@@ -162,6 +163,28 @@ SELECT DISTINCT first.ticket_id,
 		 GROUP BY 1) first
     ON first.first_changed = e.event_id
 """
+sql["organization"] = """
+SELECT
+  *
+FROM (
+  SELECT
+    DISTINCT id AS id,
+    name,
+    organization_fields.subscription_type AS subscription_type,
+    organization_fields.organization_type AS organization_type,     
+    organization_fields.technical_account_manager AS tam,
+    CAST(SUBSTR(organization_fields.effective_date, 0, 10) AS DATE) AS effective_date,
+    CAST(SUBSTR(organization_fields.renewal_date, 0, 10) AS DATE) AS renewal_date,
+    created_at,
+    deleted_at,
+    details,
+    notes,
+    RANK() OVER(PARTITION BY id ORDER BY _sdc_sequence DESC) AS rn
+  FROM
+    zendesk.organizations)
+WHERE
+  rn = 1 -- get latest update
+"""
 
 sql['ticket'] = """
 SELECT
@@ -207,11 +230,11 @@ SELECT
 FROM
    (SELECT * FROM (
 	   SELECT *,
-	   		  RANK() OVER(PARTITION BY id ORDER BY _sdc_batched_at DESC) AS rn
+	   		  RANK() OVER(PARTITION BY id ORDER BY _sdc_sequence DESC) AS rn
 	     FROM zendesk.tickets)
 	    WHERE rn = 1) AS tickets
 LEFT JOIN
-  zendesk.organizations
+  zendesk_v.organization organizations
 ON
   tickets.organization_id = organizations.id
 LEFT JOIN
@@ -267,7 +290,7 @@ FROM (
     comment,
     created_at,
     updated_at,
-    RANK() OVER(PARTITION BY id ORDER BY _sdc_batched_at DESC) AS rn
+    RANK() OVER(PARTITION BY ticket_id ORDER BY _sdc_sequence DESC) AS rn
   FROM
     zendesk.satisfaction_ratings)
 WHERE
@@ -282,11 +305,38 @@ SELECT t.id,
        CASE WHEN score = 'bad' THEN 1 ELSE 0 END AS bad,
        CASE WHEN score = 'good' THEN 1 ELSE 0 END AS good,
        CASE WHEN score = 'offered' THEN 1 ELSE 0 END AS offered,
-       t.updated_at,
-       t.created_at
-FROM zendesk_v.satisfaction_rating s
-JOIN zendesk_v.ticket t ON s.ticket_id = t.id
+       s.comment,
+       s.reason,
+       s.updated_at,
+       s.created_at
+  FROM zendesk_v.satisfaction_rating s
+  JOIN zendesk_v.ticket t 
+    ON s.ticket_id = t.id
 """
+
+
+sql["organization_metrics"] = """
+SELECT 
+       o.name AS organization,
+       o.id AS organization_id,
+       o.effective_date,
+       o.organization_type,
+       o.subscription_type,
+       o.renewal_date,
+       o.tam,
+       COUNT(DISTINCT CASE WHEN CAST(t.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) THEN t.id ELSE NULL END) AS tickets_l90d,
+       COUNT(DISTINCT CASE WHEN CAST(csat.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) AND bad = 1 THEN csat.id ELSE NULL END) AS bad_csat_l90d,
+       CAST(MAX(t.created_at) AS DATE) AS last_ticket_submitted
+  FROM zendesk_v.organization o
+  LEFT JOIN zendesk_v.ticket t
+    ON o.id = t.organization_id
+  LEFT JOIN zendesk_v.ticket_csat csat 
+    ON csat.id = t.id
+ WHERE o.deleted_at is null  
+ GROUP BY 1,2,3,4,5,6,7
+"""
+
+
 # select bundle_usage, count(*) as cnt
 # from (
 # SELECT ticket_id,
