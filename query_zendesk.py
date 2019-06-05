@@ -314,6 +314,38 @@ SELECT t.id,
     ON s.ticket_id = t.id
 """
 
+sql["csat_trend"] = """
+WITH csat_l90d AS (
+	SELECT date,
+	       SUM(n.good) AS good_l90d,
+	       SUM(n.bad) AS bad_l90d,
+	       100*SUM(n.good)/(SUM(n.good) + SUM(n.bad)) AS csat_l90d
+	  FROM UNNEST(GENERATE_DATE_ARRAY('2018-01-01', DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY))) AS date
+	 CROSS JOIN zendesk_v.ticket_csat n
+	 WHERE CAST(n.created_at AS DATE) BETWEEN DATE_ADD(date, INTERVAL -89 DAY) AND date
+	 GROUP BY 1)
+,
+csat_l30d AS (
+  SELECT date,
+         SUM(t.good) AS good_l30d,
+         SUM(t.bad) AS bad_l30d,
+         100* SUM(t.good)/(SUM(t.good) + SUM(t.bad)) AS csat_l30d
+    FROM UNNEST(GENERATE_DATE_ARRAY('2018-01-01', DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY))) AS date
+   CROSS JOIN zendesk_v.ticket_csat t
+   WHERE CAST(t.created_at AS DATE) BETWEEN DATE_ADD(date, INTERVAL -29 DAY) AND date
+   GROUP BY 1)
+
+SELECT n.date,
+       good_l90d,
+       bad_l90d,
+       csat_l90d,
+       good_l30d,
+       bad_l30d,
+       csat_l30d
+  FROM csat_l90d n
+  JOIN csat_l30d t
+    ON n.date = t.date
+ """
 
 sql["organization_metrics"] = """
 SELECT 
