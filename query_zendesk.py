@@ -348,14 +348,19 @@ SELECT n.date,
  """
 
 sql["organization_metrics"] = """
-SELECT 
+  SELECT 
        o.name AS organization,
        o.id AS organization_id,
        o.effective_date,
        o.organization_type,
        o.subscription_type,
        o.renewal_date,
-       o.tam,
+       a.id AS sfdc_account_id,
+       a.technical_account_manager__c AS tam,
+       a.renewal_risk_status__c AS renewal_risk,
+       a.uses_our_ip__c AS use_ip,
+       a.subscription_tier__c AS subscription_tier, 
+       usr.name AS SE,
        COUNT(DISTINCT CASE WHEN CAST(t.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) THEN t.id ELSE NULL END) AS tickets_l90d,
        COUNT(DISTINCT CASE WHEN CAST(csat.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) AND bad = 1 THEN csat.id ELSE NULL END) AS bad_csat_l90d,
        CAST(MAX(t.created_at) AS DATE) AS last_ticket_submitted
@@ -364,10 +369,47 @@ SELECT
     ON o.id = t.organization_id
   LEFT JOIN zendesk_v.ticket_csat csat 
     ON csat.id = t.id
- WHERE o.deleted_at is null  
- GROUP BY 1,2,3,4,5,6,7
+  LEFT JOIN zendesk_v.zd_sfdc_mapping m
+    ON m.org_id = o.id
+  LEFT JOIN sfdc.account a
+    ON m.account_id = a.id
+  LEFT JOIN sfdc.user usr
+    ON usr.id = a.sales_engineer_se__c
+--    LEFT JOIN (SELECT * FROM renewals where rn = 1) opp
+--     ON m.account_id = opp.account_id
+ WHERE o.deleted_at is null
+      AND NOT (effective_date is null AND renewal_date is null AND renewal_risk_status__c is null)
+ GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+ ORDER BY renewal_date desc
 """
-
+sql["rep_organization_mapping"] = """
+ SELECT o.owner AS user,
+        'Rep' AS role,
+        owner_role,
+        m.org_id AS organization_id,
+        m.org_name AS organization_name
+   FROM metrics.opportunity_fact o
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON o.id = opp_id
+  WHERE m.org_id <> -1
+  GROUP BY 1,2,3,4,5
+  -- Rep on opportunity
+  UNION ALL
+ SELECT r.manager AS user,
+        'Manager' AS role,
+        manager_role AS user_role,
+        m.org_id,
+        m.org_name
+   FROM metrics.opportunity_fact o
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON o.id = opp_id
+   LEFT JOIN workspace_yiying.sfdc_user_role_mapping r
+     ON r.role = o.owner_role
+  WHERE m.org_id <> -1
+    AND r.manager_role <> 'Companywide'
+  GROUP BY 1,2,3,4,5
+  -- Managers who covers the roles
+  """
 
 # select bundle_usage, count(*) as cnt
 # from (

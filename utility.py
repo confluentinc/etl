@@ -27,9 +27,14 @@ def setup_gbp(config_path):
     service_account_file_path =os.path.expanduser(bq_credentials)
     with open(service_account_file_path) as source:
         info = json.load(source)
+    
+    scopes = [
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/bigquery']
 
-    bq_credentials = service_account.Credentials.from_service_account_info(info)
+    bq_credentials = service_account.Credentials.from_service_account_info(info, scopes=scopes)
     project_id = bq_project
+
     client = bigquery.Client(credentials=bq_credentials, project=project_id)
     print ("Conection setup complete")
     return client
