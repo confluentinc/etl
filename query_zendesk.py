@@ -313,6 +313,8 @@ SELECT t.id,
   FROM zendesk_v.satisfaction_rating s
   JOIN zendesk_v.ticket t 
     ON s.ticket_id = t.id
+ WHERE type <> 'cloud-professional'
+   AND organization_id <> 360023063623 -- cloud professional org
 """
 
 sql["csat_trend"] = """
