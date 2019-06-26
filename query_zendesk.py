@@ -299,6 +299,7 @@ WHERE
 
 sql["ticket_csat"] = """
 SELECT t.id,
+       t.type,
        t.organization,
        t.organization_id,
        score,
