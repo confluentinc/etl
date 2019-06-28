@@ -386,6 +386,7 @@ sql["organization_metrics"] = """
  ORDER BY renewal_date desc
 """
 sql["rep_organization_mapping"] = """
+
  SELECT o.owner AS user,
         'Rep' AS role,
         owner_role,
@@ -398,6 +399,7 @@ sql["rep_organization_mapping"] = """
   GROUP BY 1,2,3,4,5
   -- Rep on opportunity
   UNION ALL
+  -- Managers who covers the roles
  SELECT r.manager AS user,
         'Manager' AS role,
         manager_role AS user_role,
@@ -411,7 +413,66 @@ sql["rep_organization_mapping"] = """
   WHERE m.org_id <> -1
     AND r.manager_role <> 'Companywide'
   GROUP BY 1,2,3,4,5
-  -- Managers who covers the roles
+  UNION ALL
+   -- Account manager
+ SELECT a.Technical_Account_Manager__c AS user,
+        'Account Manager' AS role,
+        r.name AS owner_role,
+        m.org_id AS organization_id,
+        m.org_name AS organization_name
+   FROM sfdc.account a
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON a.id = m.account_id
+   LEFT JOIN sfdc.user usr
+     ON usr.name = a.Technical_Account_Manager__c
+   LEFT JOIN stitch_sfdc.UserRole_view r
+     ON r.id = usr.userroleid
+  WHERE m.org_id <> -1
+    AND Technical_Account_Manager__c IS NOT NULL
+  GROUP BY 1,2,3,4,5
+  UNION ALL
+   -- SE
+  SELECT usr.name AS user,
+        'SE' AS role,
+        r.name AS owner_role,
+        m.org_id AS organization_id,
+        m.org_name AS organization_name
+   FROM sfdc.account a
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON a.id = m.account_id
+   LEFT JOIN sfdc.user usr
+     ON usr.id = a.Sales_Engineer_SE__c
+   LEFT JOIN stitch_sfdc.UserRole_view r
+     ON r.id = usr.userroleid
+  WHERE m.org_id <> -1
+    AND Sales_Engineer_SE__c IS NOT NULL
+  GROUP BY 1,2,3,4,5
+  UNION ALL
+  -- SE Manager
+  SELECT rm.manager AS user,
+        'SE Manager' AS role,
+        rm.manager_role AS owner_role,
+        m.org_id AS organization_id,
+        m.org_name AS organization_name
+   FROM sfdc.account a
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON a.id = m.account_id
+   LEFT JOIN sfdc.user usr
+     ON usr.id = a.Sales_Engineer_SE__c
+   LEFT JOIN stitch_sfdc.UserRole_view r
+     ON r.id = usr.userroleid
+   LEFT JOIN workspace_yiying.sfdc_user_role_mapping rm
+     ON r.name = rm.role
+  WHERE 1 = 1
+    AND rm.manager_role <> 'Companywide'
+    AND m.org_id <> -1
+    AND rm.manager IS NOT NULL
+    AND rm.manager_role LIKE '%SE%'
+  GROUP BY 1,2,3,4,5
+
+
+
+  
   """
 
 # select bundle_usage, count(*) as cnt
