@@ -189,6 +189,7 @@ WHERE
 sql['ticket'] = """
 SELECT
   DISTINCT tickets.id,
+  tickets.id AS id2,
   organizations.name AS organization,
   tickets.organization_id,
   user.name AS assignee,
@@ -387,20 +388,26 @@ sql["organization_metrics"] = """
 """
 sql["rep_organization_mapping"] = """
 
- SELECT o.owner AS user,
+ SELECT usr.name AS user,
+        usr.firstname AS first_name,
+        usr.lastname AS last_name,
         'Rep' AS role,
-        owner_role,
+        o.owner_role__c AS owner_role,
         m.org_id AS organization_id,
         m.org_name AS organization_name
-   FROM metrics.opportunity_fact o
+   FROM sfdc.opportunity o
    JOIN zendesk_v.zd_sfdc_mapping m
-     ON o.id = opp_id
+     ON o.id = m.opp_id
+   LEFT JOIN sfdc.user usr
+    ON o.ownerid = usr.id
   WHERE m.org_id <> -1
-  GROUP BY 1,2,3,4,5
+  GROUP BY 1,2,3,4,5,6,7
   -- Rep on opportunity
   UNION ALL
   -- Managers who covers the roles
  SELECT r.manager AS user,
+ 		usr.firstname AS first_name,
+        usr.lastname AS last_name,
         'Manager' AS role,
         manager_role AS user_role,
         m.org_id,
@@ -410,29 +417,35 @@ sql["rep_organization_mapping"] = """
      ON o.id = opp_id
    LEFT JOIN workspace_yiying.sfdc_user_role_mapping r
      ON r.role = o.owner_role
+   LEFT JOIN sfdc.user usr
+    ON r.manager_id = usr.id
   WHERE m.org_id <> -1
     AND r.manager_role <> 'Companywide'
-  GROUP BY 1,2,3,4,5
+  GROUP BY 1,2,3,4,5,6,7
   UNION ALL
    -- Account manager
- SELECT a.Technical_Account_Manager__c AS user,
+ SELECT usr.name AS user,
+        usr.firstname AS first_name,
+        usr.lastname AS last_name,
         'Account Manager' AS role,
         r.name AS owner_role,
         m.org_id AS organization_id,
         m.org_name AS organization_name
-   FROM sfdc.account a
+   FROM confluent_sfdc.accounts_view a
    JOIN zendesk_v.zd_sfdc_mapping m
      ON a.id = m.account_id
    LEFT JOIN sfdc.user usr
-     ON usr.name = a.Technical_Account_Manager__c
+     ON usr.id = a.account_manager_c
    LEFT JOIN stitch_sfdc.UserRole_view r
      ON r.id = usr.userroleid
   WHERE m.org_id <> -1
-    AND Technical_Account_Manager__c IS NOT NULL
-  GROUP BY 1,2,3,4,5
+    AND account_manager_c IS NOT NULL
+  GROUP BY 1,2,3,4,5,6,7
   UNION ALL
    -- SE
   SELECT usr.name AS user,
+         usr.firstname AS first_name,
+         usr.lastname AS last_name,
         'SE' AS role,
         r.name AS owner_role,
         m.org_id AS organization_id,
@@ -446,10 +459,12 @@ sql["rep_organization_mapping"] = """
      ON r.id = usr.userroleid
   WHERE m.org_id <> -1
     AND Sales_Engineer_SE__c IS NOT NULL
-  GROUP BY 1,2,3,4,5
+  GROUP BY 1,2,3,4,5,6,7
   UNION ALL
   -- SE Manager
-  SELECT rm.manager AS user,
+ SELECT rm.manager AS user,
+        usr2.firstname AS first_name,
+        usr2.lastname AS last_name,
         'SE Manager' AS role,
         rm.manager_role AS owner_role,
         m.org_id AS organization_id,
@@ -463,17 +478,15 @@ sql["rep_organization_mapping"] = """
      ON r.id = usr.userroleid
    LEFT JOIN workspace_yiying.sfdc_user_role_mapping rm
      ON r.name = rm.role
+   LEFT JOIN sfdc.user usr2
+    ON rm.manager_id = usr2.id
   WHERE 1 = 1
     AND rm.manager_role <> 'Companywide'
     AND m.org_id <> -1
     AND rm.manager IS NOT NULL
     AND rm.manager_role LIKE '%SE%'
-  GROUP BY 1,2,3,4,5
-
-
-
-  
-  """
+  GROUP BY 1,2,3,4,5,6,7
+ """
 
 # select bundle_usage, count(*) as cnt
 # from (
