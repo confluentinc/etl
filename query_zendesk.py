@@ -365,6 +365,7 @@ sql["organization_metrics"] = """
        a.uses_our_ip__c AS use_ip,
        a.subscription_tier__c AS subscription_tier, 
        usr.name AS SE,
+       usr2.name AS CAM,
        COUNT(DISTINCT CASE WHEN CAST(t.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) THEN t.id ELSE NULL END) AS tickets_l90d,
        COUNT(DISTINCT CASE WHEN CAST(csat.created_at AS DATE) >= DATE_ADD(CURRENT_DATE,  INTERVAL -90 DAY) AND bad = 1 THEN csat.id ELSE NULL END) AS bad_csat_l90d,
        CAST(MAX(t.created_at) AS DATE) AS last_ticket_submitted
@@ -379,11 +380,15 @@ sql["organization_metrics"] = """
     ON m.account_id = a.id
   LEFT JOIN sfdc.user usr
     ON usr.id = a.sales_engineer_se__c
+  LEFT JOIN confluent_sfdc.accounts_view av
+    ON av.id = m.account_id
+  LEFT JOIN sfdc.user usr2
+    ON usr2.id = av.account_manager_c
 --    LEFT JOIN (SELECT * FROM renewals where rn = 1) opp
 --     ON m.account_id = opp.account_id
  WHERE o.deleted_at is null
       AND NOT (effective_date is null AND renewal_date is null AND renewal_risk_status__c is null)
- GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+ GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
  ORDER BY renewal_date desc
 """
 sql["rep_organization_mapping"] = """
