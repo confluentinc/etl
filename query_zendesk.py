@@ -1,15 +1,5 @@
 sql = {}
 
-sql['audit'] = """
-SELECT DISTINCT 
-       id,
-       ticket_id,
-       created_at,
-       author_id
-  FROM zendesk.ticket_audits
- WHERE created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
-"""
-
 sql['change_event'] = """
 SELECT DISTINCT a.id AS audit_id,
        e.id AS event_id,
@@ -18,6 +8,16 @@ SELECT DISTINCT a.id AS audit_id,
        e.previous_value
  FROM zendesk.ticket_audits a, unnest(events) AS e
  WHERE a.created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
+"""
+
+sql['audit'] = """
+SELECT DISTINCT 
+       id,
+       ticket_id,
+       created_at,
+       author_id
+  FROM zendesk.ticket_audits
+ WHERE created_at > (SELECT MAX(created_at) FROM zendesk_v.audit)
 """
 
 sql["ticket_data"] = """

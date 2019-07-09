@@ -13,7 +13,8 @@ from utility import setup_gbp, query_to_bq, query_append_bq
 print(datetime.now())
 client = setup_gbp('~/.confluentR.config')
 
-incremental_table = ["audit", "change_event"]
+incremental_table = ["change_event", "audit"]
+
 full_table = ["user", "organization", "ticket_metric", "ticket_data", "ticket_priority", "ticket_initial_priority",
 			  "ticket_time_spent", "ticket_component", "ticket_cause", "bundle_usage", "ticket_kafka_version",
 			  "ticket_java_version", "ticket_operating_system", "ticket", "satisfaction_rating",
