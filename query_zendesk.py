@@ -365,8 +365,13 @@ sql["organization_metrics"] = """
        o.subscription_type,
        o.renewal_date,
        a.id AS sfdc_account_id,
+       a.name AS account,
        a.technical_account_manager__c AS tam,
-       a.renewal_risk_status__c AS renewal_risk,
+  CASE WHEN a.renewal_risk_status__c = 'Red' THEN '1. Red'
+       WHEN a.renewal_risk_status__c = 'Yellow' THEN '2. Yellow'
+       WHEN a.renewal_risk_status__c = 'Green' THEN '3. Green'
+       WHEN a.renewal_risk_status__c is NULL THEN '4. N/A'
+       ELSE renewal_risk_status__c END AS renewal_risk,
        a.uses_our_ip__c AS use_ip,
        a.subscription_tier__c AS subscription_tier, 
        usr.name AS SE,
@@ -393,7 +398,7 @@ sql["organization_metrics"] = """
 --     ON m.account_id = opp.account_id
  WHERE o.deleted_at is null
       AND NOT (effective_date is null AND renewal_date is null AND renewal_risk_status__c is null)
- GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+ GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
  ORDER BY renewal_date desc
 """
 sql["rep_organization_mapping"] = """
