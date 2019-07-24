@@ -457,6 +457,26 @@ sql["rep_organization_mapping"] = """
     AND account_manager_c IS NOT NULL
   GROUP BY 1,2,3,4,5,6,7
   UNION ALL
+  --EAM 
+  SELECT usr.name AS user,
+        usr.firstname AS first_name,
+        usr.lastname AS last_name,
+        'EAM' AS role,
+        r.name AS owner_role,
+        m.org_id,
+        m.org_name
+   FROM sfdc.account a
+   JOIN zendesk_v.zd_sfdc_mapping m
+     ON a.id = m.account_id
+   LEFT JOIN sfdc.user usr
+     ON usr.id = a.eam_owner__c
+   LEFT JOIN stitch_sfdc.UserRole_view r
+     ON r.id = usr.userroleid
+  WHERE 1=1
+    AND m.org_id <> -1
+    AND eam_owner__c IS NOT NULL
+  GROUP BY 1,2,3,4,5,6,7
+  UNION ALL
    -- SE
   SELECT usr.name AS user,
          usr.firstname AS first_name,
@@ -552,6 +572,23 @@ SELECT usr.name AS user,
      ON r.id = usr.userroleid
   WHERE 1=1
     AND account_manager_c IS NOT NULL
+  GROUP BY 1,2,3,4,5,6,7
+  -- EAM
+  UNION ALL
+  SELECT usr.name AS user,
+        usr.firstname AS first_name,
+        usr.lastname AS last_name,
+        'EAM' AS role,
+        r.name AS owner_role,
+        a.id AS account_id,
+        a.name AS account_name
+   FROM sfdc.account a
+   LEFT JOIN sfdc.user usr
+     ON usr.id = a.eam_owner__c
+   LEFT JOIN stitch_sfdc.UserRole_view r
+     ON r.id = usr.userroleid
+  WHERE 1=1
+    AND eam_owner__c IS NOT NULL
   GROUP BY 1,2,3,4,5,6,7
   UNION ALL
    -- SE
