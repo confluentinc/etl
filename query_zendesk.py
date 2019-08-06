@@ -96,7 +96,8 @@ SELECT a.ticket_id,
   FROM zendesk_v.change_event c
   JOIN zendesk_v.audit a
     ON c.audit_id = a.id
- WHERE c.field_name = '34347708'
+ WHERE c.field_name = '34347708' 
+   AND c.value <> ''
  GROUP BY 1
  """
 
