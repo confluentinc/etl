@@ -92,7 +92,7 @@ sql['ticket_priority'] = """
 
 sql['ticket_time_spent'] = """
 SELECT a.ticket_id,
-       MAX(c.value) AS time_spent
+       MAX(CAST(c.value AS INT64)) AS time_spent
   FROM zendesk_v.change_event c
   JOIN zendesk_v.audit a
     ON c.audit_id = a.id
