@@ -18,7 +18,7 @@ incremental_table = ["change_event", "audit"]
 full_table = ["user", "organization", "ticket_metric", "ticket_data", "ticket_priority", "ticket_initial_priority",
 			  "ticket_time_spent", "ticket_component", "ticket_cause", "bundle_usage", "ticket_kafka_version",
 			  "ticket_java_version", "ticket_operating_system", "ticket", "satisfaction_rating",
-			  "ticket_csat", "csat_trend", "organization_metrics", "rep_organization_mapping", "rep_sfdc_account_map"]
+			  "ticket_csat", "csat_trend", "zendesk_sfdc_mapping", "organization_metrics", "rep_organization_mapping", "rep_sfdc_account_map"]
 
 # Insert newly appended records from stitch audit table to audit and change_event
 for t in incremental_table:
