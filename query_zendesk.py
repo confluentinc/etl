@@ -358,6 +358,7 @@ SELECT n.date,
  """
 ## Leverage the customer id field to get a more comprehensive mapping
 sql["zendesk_sfdc_mapping"] = """
+SELECT * from (
 SELECT o.account_name,
        o.name, 
        o.id as opportunity_id,
@@ -369,7 +370,7 @@ SELECT o.account_name,
     on z.customer_id = substr(o.id, 1, 15)
  UNION ALL 
 SELECT * 
-  FROM zendesk_v.zd_sfdc_mapping
+  FROM zendesk_v.zd_sfdc_mapping)
   group by 1,2,3,4,5,6
 """
 
@@ -423,6 +424,7 @@ sql["rep_organization_mapping"] = """
  SELECT DISTINCT rep.user AS user,
         rep.first_name AS first_name,
         rep.last_name AS last_name,
+        rep.email,
         rep.role,
         rep.owner_role AS owner_role,
         m.org_id AS organization_id,
